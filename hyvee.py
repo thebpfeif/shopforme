@@ -1,4 +1,5 @@
 import json
+import logging
 import requests
 from time import sleep
 
@@ -82,8 +83,8 @@ class HyVee(object):
 
     def get_item_id(self, search_item):
         # ct101 denotes it's the first button, increment by 1
-        button1url = 'ctl00_ContentPlaceHolder1_uclOtherList_rptProducts_ctl01_liProduct'
-        frequentPurchases = 'ctl00_ContentPlaceHolder1_uclWhatIBuyList_rptProducts_ctl01_liProduct'
+        all_results_first = 'ctl00_ContentPlaceHolder1_uclOtherList_rptProducts_ctl01_liProduct'
+        frequent_purchases_first = 'ctl00_ContentPlaceHolder1_uclWhatIBuyList_rptProducts_ctl01_liProduct'
 
         # append search to the end of the url
         self.search_url += search_item
@@ -92,7 +93,9 @@ class HyVee(object):
 
         self.load_cookies()
 
-        python_button = self.webdriver.find_element_by_id(button1url)
+        # TODO: Add option to grab the first result from 'Frequent Purchases'
+        python_button = self.webdriver.find_element_by_id(all_results_first)
+
         python_button.click()
 
         # get the url of the selected product page
