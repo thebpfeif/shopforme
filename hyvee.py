@@ -1,10 +1,20 @@
-import requests
 import json
+import requests
+from time import sleep
+
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.options import Options
+
+from urllib import request
+
+PRODUCT_ID_LENGTH = 7
 
 
 class HyVee(object):
     def __init__(self):
-        self.url = "https://www.hy-vee.com/grocery/calls/ajax.asmx/AddItemToCart"
+        self.cart_url = "https://www.hy-vee.com/grocery/calls/ajax.asmx/AddItemToCart"
+        self.search_url = "https://www.hy-vee.com/grocery/search?search="
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Encoding": "gzip, deflate, br",
@@ -28,15 +38,39 @@ class HyVee(object):
             "refreshCartTotals": "true"
         }
 
-    def add_to_cart(self, grocery_id=None, quantity=1):
+    def add_to_cart(self, product_id, quantity=1):
         # Update values
-        self.data['hierarchyID'] = grocery_id
+        self.data['hierarchyID'] = product_id
         self.data['quantity'] = quantity
 
         self.data = json.dumps(self.data)
-        req = requests.post(self.url, headers=self.headers, data=self.data)
+        req = requests.post(self.cart_url, headers=self.headers, data=self.data)
         print(req.status_code)
         return
 
+    def get_item_id(self, search_item):
+        # ct101 denotes it's the first button, increment by 1
+        button1url = 'ctl00_ContentPlaceHolder1_uclOtherList_rptProducts_ctl01_liProduct'
+        frequentPurchases = 'ctl00_ContentPlaceHolder1_uclWhatIBuyList_rptProducts_ctl01_liProduct'
+
+        # append search to the end of the url
+        self.search_url += search_item
+
+        # create a new Firefox session
+        firefox_options = Options()
+        firefox_options.add_argument("-headless")
+        driver = webdriver.Firefox(firefox_options=firefox_options)
+        driver.implicitly_wait(10)
+        sleep(3)
+        driver.get(self.search_url)
+        python_button = driver.find_element_by_id(button1url)
+        python_button.click()
+
+        # get the url of the selected product page
+        newurl = driver.current_url
+        id_pos = newurl.find('PD') + 2
+        product_id = newurl[id_pos:id_pos+PRODUCT_ID_LENGTH]
+
+        return product_id
 
 
