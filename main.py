@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from hyvee import HyVee
 from grocery_manager.models import Item
 from secrets import email, password

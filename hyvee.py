@@ -1,5 +1,5 @@
 import json
-import logging
+import re
 import requests
 from time import sleep
 
@@ -7,6 +7,8 @@ import pickle
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
+
+from grocery_manager.models import Item
 
 from urllib import request
 
@@ -81,7 +83,7 @@ class HyVee(object):
 
         print(req.status_code)
 
-    def get_item_id(self, search_item):
+    def search_for_item(self, search_item):
         # ct101 denotes it's the first button, increment by 1
         all_results_first = 'ctl00_ContentPlaceHolder1_uclOtherList_rptProducts_ctl01_liProduct'
         frequent_purchases_first = 'ctl00_ContentPlaceHolder1_uclWhatIBuyList_rptProducts_ctl01_liProduct'
@@ -100,17 +102,72 @@ class HyVee(object):
 
         # get the url of the selected product page
         newurl = self.webdriver.current_url
-        id_pos = newurl.find('PD') + 2
-        product_id = newurl[id_pos:id_pos+PRODUCT_ID_LENGTH]
+
+        product_id = self._get_product_id(newurl)
 
         return product_id
-
-    def save_cookies(self):
-        pickle.dump(self.webdriver.get_cookies(), open("cookies.pkl", "wb"))
 
     def load_cookies(self):
         cookies = pickle.load(open("cookies.pkl", "rb"))
         for cookie in cookies:
             self.webdriver.add_cookie(cookie)
+
+    def save_cookies(self):
+        pickle.dump(self.webdriver.get_cookies(), open("cookies.pkl", "wb"))
+
+    def get_product_data(self, url):
+        data = Item()
+
+        # Navigate to desired webpage
+        self.webdriver.get(url)
+
+        data.brand = self._get_product_brand()
+        data.count = self._get_product_count()
+        data.product_id = self._get_product_id()
+        data.name = self._get_product_name()
+        data.weight = self._get_product_weight()
+        data.units = self._get_product_weight_units()
+
+        return data
+
+    def _get_product_brand(self):
+        # TODO
+        return "hyvee"
+
+    def _get_product_count(self):
+        # TODO
+        return 0
+
+    def _get_product_id(self):
+        url = self.webdriver.current_url
+        id_pos = url.find('PD') + 2
+        product_id = url[id_pos:id_pos + PRODUCT_ID_LENGTH]
+
+        return product_id
+
+    def _get_product_name(self):
+        title_id = "ctl00_ContentPlaceHolder1_HeadingContainer"
+        return self.webdriver.find_element_by_id(title_id).text
+
+    def _get_product_price(self):
+        price_id = "ctl00_ContentPlaceHolder1_pPrice"
+        price = self.webdriver.find_element_by_id(price_id).text
+        price.strip('¢').strip('$')
+
+    def _get_product_weight(self):
+        weight_id = "ctl00_ContentPlaceHolder1_liSize"
+        product_weight = self.webdriver.find_element_by_id(weight_id).text
+        # Strip out any letters
+        product_weight = re.sub('[^0-9]+', '', product_weight)
+
+        return product_weight
+
+    def _get_product_weight_units(self):
+        # TODO
+        return "ounces"
+
+
+
+
 
 

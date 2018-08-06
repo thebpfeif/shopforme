@@ -3,7 +3,7 @@ from django.utils import timezone
 
 
 class Item(models.Model):
-    product_id = models.IntegerField()
+    product_id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=250)
     brand = models.CharField(max_length=100)
     count = models.IntegerField(default=1)
