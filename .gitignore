@@ -107,5 +107,8 @@ venv.bak/
 # Pycharm IDE files
 .idea/
 
+# Pickle files
+*.pkl
+
 # sensitive info
 secrets.py
